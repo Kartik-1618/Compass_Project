@@ -1,8 +1,10 @@
 from flask import Flask, request, render_template, redirect, url_for, flash, session
 import mysql.connector as my
 import smtplib
+import os
 from email.message import EmailMessage
-
+from dotenv import load_dotenv
+load_dotenv()
 
 app = Flask(__name__)
 app.secret_key = "your_secret_key"  # Required for session & flash messages
@@ -12,7 +14,7 @@ mydb = my.connect(
     host="localhost",
     user="root",
     password="",
-    database="compass"
+    database="old_compass"
 )
 
 mycursor = mydb.cursor(dictionary=True)  # Ensure it's in dictionary mode
@@ -168,42 +170,45 @@ def create_student_acc():
         mydb.commit()
 
         flash("Account created successfully! You can now log in.", "success")
-
-        #smtp logic
-        sender="compass.internships@gmail.com"
-        receiver=email
-        sender_password="sxlt gfnf xfoh zevm"
-
-        message = EmailMessage()
-        message["From"]= sender
-        message["To"]= receiver
-        message["Subject"]=" Welcome to Compass! Your Account Has Been Successfully Created"
         
-        content= f"""\
-        Dear {name},
+        try:
+            #smtp logic
+            sender=os.getenv("SMTP_EMAIL")
+            sender_password=os.getenv("SMTP_PASSWORD")
+            receiver=email
 
-        We are thrilled to have you on board! Your account has been successfully created on Compass. Below are your account details:
+            message = EmailMessage()
+            message["From"]= sender
+            message["To"]= receiver
+            message["Subject"]=" Welcome to Compass! Your Account Has Been Successfully Created"
+            
+            content= f"""\
+            Dear {name},
 
-        🔹 Name: {name}
-        🔹 Email: {email}
-        🔹 Account Type: Student
+            We are thrilled to have you on board! Your account has been successfully created on Compass. Below are your account details:
 
-        You can now log in using your registered email and start exploring our platform.
+            🔹 Name: {name}
+            🔹 Email: {email}
+            🔹 Account Type: Student
 
-        For security reasons, please do not share your credentials with anyone. If you have any questions or need assistance, feel free to contact our support team.
+            You can now log in using your registered email and start exploring our platform.
 
-        Welcome aboard! 🚀
+            For security reasons, please do not share your credentials with anyone. If you have any questions or need assistance, feel free to contact our support team.
 
-        Best regards,  
-        Compass  
-        📧 compass.internships@gmail.com
-        """
-        message.set_content(content)
+            Welcome aboard! 🚀
 
-        with smtplib.SMTP_SSL("smtp.gmail.com",465) as server:
-            server.login(sender,sender_password)
-            server.send_message(message)
+            Best regards,  
+            Compass  
+            📧 compass.internships@gmail.com
+            """
+            message.set_content(content)
 
+            with smtplib.SMTP_SSL("smtp.gmail.com",465) as server:
+                server.login(sender,sender_password)
+                server.send_message(message)
+
+        except(e):
+            print(e)
         return redirect(url_for('student_login'))
 
     except Exception as e:
@@ -237,9 +242,9 @@ def create_recruiter_acc():
         flash("Account created successfully! You can now log in.", "success")
 
         #smtp logic
-        sender="compass.internships@gmail.com"
+        sender=os.getenv("SMTP_EMAIL")
+        sender_password=os.getenv("SMTP_PASSWORD")
         receiver=email
-        sender_password="sxlt gfnf xfoh zevm"
 
         message = EmailMessage()
         message["From"]= sender
@@ -454,9 +459,9 @@ def accept_applicant():
         mydb.commit()
 
         #smtp
-        sender="compass.internships@gmail.com"
+        sender=os.getenv("SMTP_EMAIL")
+        sender_password=os.getenv("SMTP_PASSWORD")
         receiver=email
-        sender_password="sxlt gfnf xfoh zevm"
 
         message = EmailMessage()
         message["From"]= sender
@@ -509,9 +514,9 @@ def reject_applicant():
         mydb.commit()
 
         #smtp
-        sender="compass.internships@gmail.com"
+        sender=os.getenv("SMTP_EMAIL")
+        sender_password=os.getenv("SMTP_PASSWORD")
         receiver=email
-        sender_password="sxlt gfnf xfoh zevm"
 
         message = EmailMessage()
         message["From"]= sender
